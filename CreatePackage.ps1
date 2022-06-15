@@ -50,7 +50,14 @@ $Xaml = @"
     Margin              = "20,80,0,0" 
     Width               = "500" 
     />
-
+<TextBox
+    Name                = "TextBox"
+    HorizontalAlignment = "Left" 
+    VerticalAlignment   = "Top"
+    Margin              = "20,120,0,0" 
+    Width               = "500"
+    Height              = "220" 
+    />
 
 </Grid>
 </Window>
@@ -103,11 +110,20 @@ $Publisher.Add_SelectionChanged({
     })
 
 $Application.Add_SelectionChanged({
-    $Application.SelectedItem
-    $Version.Items.Clear()
-    Get-ChildItem -Directory $Application.SelectedItem.FullName | foreach -Process {$Version.AddChild($_)}
-    })
-
+    if ($Application.SelectedItem -ne $null) 
+    {
+        $Version.Items.Clear()
+        Get-ChildItem -Directory $Application.SelectedItem.FullName -Recurse | foreach -Process {
+            if (Get-ChildItem $_.FullName -File -ErrorAction SilentlyContinue) {$Version.AddChild($_)}
+        }
+    }
+    }
+    )
+$Version.Add_SelectionChanged({
+    $TextBox.text = "$(Get-ChildItem $Version.SelectedItem.FullName -Filter "*installer.yaml" | Get-Content |convertfrom-yaml |convertto-json |Out-String)"
+    #$TextBox.text = "$($_|Out-String) - hi $(Get-date)"
+})
+#Get-ChildItem $_.FullName -Filter "*installer.yaml" | Get-Content |convertfrom-yaml |convertto-json |Out-String
 $LogDir = "E:\StorageFolder\Thomas\_Projects\TimeLogging"
 $clear.Add_Click({$Notes.text = "Hello`n`rHello"})
 $Log.Add_Click({
