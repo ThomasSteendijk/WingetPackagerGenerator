@@ -1,4 +1,4 @@
-
+cd $PSScriptRoot
 #-------------------------------------------------------------#
 #----Initial Declarations-------------------------------------#
 #-------------------------------------------------------------#
@@ -26,16 +26,32 @@ $Xaml = @"
     Margin              = "701,322,0,0" 
     Name                = "Log"
     />
-<TextBox 
+<ComboBox 
+    Name                = "Publisher"
     HorizontalAlignment = "Left" 
-    VerticalAlignment   = "Top" 
-    Height              = "324" 
-    Width               = "665" 
-    TextWrapping        = "Wrap" 
-    Margin              = "21,17,0,0" 
-    Name                = "Notes"
-
+    VerticalAlignment   = "Top"
+    Margin              = "20,20,0,0" 
+    Width               = "500" 
+    IsTextSearchEnabled = "True"
+    IsEditable          = "True"
     />
+
+<ComboBox 
+    Name                = "Application"
+    HorizontalAlignment = "Left" 
+    VerticalAlignment   = "Top"
+    Margin              = "20,50,0,0" 
+    Width               = "500" 
+    />
+<ComboBox 
+    Name                = "Version"
+    HorizontalAlignment = "Left" 
+    VerticalAlignment   = "Top"
+    Margin              = "20,80,0,0" 
+    Width               = "500" 
+    />
+
+
 </Grid>
 </Window>
 "@
@@ -56,6 +72,15 @@ $Xaml = @"
 #-------------------------------------------------------------#
 #----Script Execution-----------------------------------------#
 #-------------------------------------------------------------#
+$ProgressPreference = "SilentlyContinue"
+if (!(Test-Path -Path  .\winget-pkgs.zip)) {
+    Invoke-WebRequest -Uri "https://codeload.github.com/microsoft/winget-pkgs/zip/refs/heads/master" -UseBasicParsing -OutFile .\winget-pkgs.zip
+    Expand-Archive -Path .\winget-pkgs.zip
+}
+
+$manifestBase = ".\winget-pkgs\winget-pkgs-master\manifests"
+
+
 
 $Window = [Windows.Markup.XamlReader]::Parse($Xaml)
 
@@ -63,13 +88,33 @@ $Window = [Windows.Markup.XamlReader]::Parse($Xaml)
 
 $xml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name $_.Name -Value $Window.FindName($_.Name) }
 
+
+#$Publisher.IsTextSearchEnabled = $true
+
+Get-ChildItem -Directory $manifestBase -Depth 1 | foreach -Process {
+    $Publisher.AddChild($_)
+}
+
+$Publisher.Add_SelectionChanged({
+    write-host "Selected"
+    $Application.Items.Clear()
+    $Version.Items.Clear()
+    Get-ChildItem -Directory $Publisher.SelectedItem.FullName | foreach -Process {$Application.AddChild($_)}
+    })
+
+$Application.Add_SelectionChanged({
+    $Application.SelectedItem
+    $Version.Items.Clear()
+    Get-ChildItem -Directory $Application.SelectedItem.FullName | foreach -Process {$Version.AddChild($_)}
+    })
+
 $LogDir = "E:\StorageFolder\Thomas\_Projects\TimeLogging"
 $clear.Add_Click({$Notes.text = "Hello`n`rHello"})
 $Log.Add_Click({
-    $Notes.text | out-file $LogDir\$(get-date -Format yyyyMMddHHmmss)_timeLog.md -Encoding UTF8 
+$Publisher.AddChild("hello")
+    #$Notes.text | out-file $LogDir\$(get-date -Format yyyyMMddHHmmss)_timeLog.md -Encoding UTF8 
 })
 
-$Notes.text = "Subject`t: `n`nNotes`t: `n"
 
 
 
