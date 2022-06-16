@@ -42,6 +42,8 @@ $Xaml = @"
     VerticalAlignment   = "Top"
     Margin              = "20,50,0,0" 
     Width               = "500" 
+    IsTextSearchEnabled = "True"
+    IsEditable          = "True"
     />
 <ComboBox 
     Name                = "Version"
@@ -51,12 +53,27 @@ $Xaml = @"
     Width               = "500" 
     />
 <TextBox
-    Name                = "TextBox"
+    Name                = "WingetInstallString"
     HorizontalAlignment = "Left" 
     VerticalAlignment   = "Top"
     Margin              = "20,120,0,0" 
     Width               = "500"
-    Height              = "220" 
+    />
+<TextBox
+    Name                = "Installers"
+    HorizontalAlignment = "Left" 
+    VerticalAlignment   = "Top"
+    Margin              = "20,140,0,0" 
+    Width               = "500"
+    Height              = "50"
+    />
+<TextBox
+    Name                = "TextBox"
+    HorizontalAlignment = "Left" 
+    VerticalAlignment   = "Top"
+    Margin              = "20,200,0,0" 
+    Width               = "500"
+    Height              = "140" 
     />
 
 </Grid>
@@ -79,13 +96,18 @@ $Xaml = @"
 #-------------------------------------------------------------#
 #----Script Execution-----------------------------------------#
 #-------------------------------------------------------------#
+
+
 $ProgressPreference = "SilentlyContinue"
+<#
 if (!(Test-Path -Path  .\winget-pkgs.zip)) {
     Invoke-WebRequest -Uri "https://codeload.github.com/microsoft/winget-pkgs/zip/refs/heads/master" -UseBasicParsing -OutFile .\winget-pkgs.zip
     Expand-Archive -Path .\winget-pkgs.zip
 }
+#>
 
-$manifestBase = ".\winget-pkgs\winget-pkgs-master\manifests"
+$manifestBase = ".\winget-pkgs\manifests"
+
 
 
 
@@ -120,7 +142,18 @@ $Application.Add_SelectionChanged({
     }
     )
 $Version.Add_SelectionChanged({
-    $TextBox.text = "$(Get-ChildItem $Version.SelectedItem.FullName -Filter "*installer.yaml" | Get-Content |convertfrom-yaml |convertto-json |Out-String)"
+    $InstallerInfo            = Get-ChildItem $Version.SelectedItem.FullName -Filter "*installer.yaml" | Get-Content |convertfrom-yaml
+    $TextBox.text             = "$($InstallerInfo |convertto-json |Out-String)"
+    $WingetInstallString.text = "winget install $($InstallerInfo.PackageIdentifier) -v $($Version.SelectedItem.name)"
+    #$Installers.text = ""
+    $Installers.text.clear()
+    foreach ($installer in $InstallerInfo.Installers) {
+        $Installers.text += "Architecture  :  $($installer.Architecture)
+InstallerType :  $($installer.InstallerType)
+InstallerUrl  :  $($installer.InstallerUrl)`n"
+    }
+    
+    
     #$TextBox.text = "$($_|Out-String) - hi $(Get-date)"
 })
 #Get-ChildItem $_.FullName -Filter "*installer.yaml" | Get-Content |convertfrom-yaml |convertto-json |Out-String
