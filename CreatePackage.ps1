@@ -52,29 +52,57 @@ $Xaml = @"
     Margin              = "20,80,0,0" 
     Width               = "500" 
     />
-<TextBox
-    Name                = "WingetInstallString"
+
+
+<TabControl 
+    Margin="20,120,0,0"
     HorizontalAlignment = "Left" 
     VerticalAlignment   = "Top"
-    Margin              = "20,120,0,0" 
     Width               = "500"
-    />
-<TextBox
-    Name                = "Installers"
-    HorizontalAlignment = "Left" 
-    VerticalAlignment   = "Top"
-    Margin              = "20,140,0,0" 
-    Width               = "500"
-    Height              = "50"
-    />
-<TextBox
-    Name                = "TextBox"
-    HorizontalAlignment = "Left" 
-    VerticalAlignment   = "Top"
-    Margin              = "20,200,0,0" 
-    Width               = "500"
-    Height              = "140" 
-    />
+    Height              = "220">
+    <TabItem Header="WingetInstallString">
+        <Grid Background="#FFE5E5E5">
+            <TextBox
+                Name                = "WingetInstallString"
+                HorizontalAlignment = "Left" 
+                VerticalAlignment   = "Top"
+                Margin              = "0,0,0,0" 
+                Width               = "493"
+                Height              = "190"
+            />
+        </Grid>
+    </TabItem>
+    <TabItem Header="Installers">
+        <Grid Background="#FFE5E5E5">
+            <TextBox
+                Name                = "Installers"
+                HorizontalAlignment = "Left" 
+                VerticalAlignment   = "Top"
+                Margin              = "0,0,0,0"  
+                Width               = "493"
+                Height              = "190"
+            />
+        </Grid>
+    </TabItem>
+    <TabItem Header="Comandos">
+        <Grid Background="#FFE5E5E5">
+            <TextBox
+                Name                = "Commandos"
+                HorizontalAlignment = "Left" 
+                VerticalAlignment   = "Top"
+                Margin              = "0,0,0,0"  
+                Width               = "493"
+                Height              = "190"
+            />
+        </Grid>
+    </TabItem>
+</TabControl>
+
+
+
+
+
+
 
 </Grid>
 </Window>
@@ -145,8 +173,7 @@ $Version.Add_SelectionChanged({
     $InstallerInfo            = Get-ChildItem $Version.SelectedItem.FullName -Filter "*installer.yaml" | Get-Content |convertfrom-yaml
     $TextBox.text             = "$($InstallerInfo |convertto-json |Out-String)"
     $WingetInstallString.text = "winget install $($InstallerInfo.PackageIdentifier) -v $($Version.SelectedItem.name)"
-    #$Installers.text = ""
-    $Installers.text.clear()
+    $Installers.text = ""
     foreach ($installer in $InstallerInfo.Installers) {
         $Installers.text += "Architecture  :  $($installer.Architecture)
 InstallerType :  $($installer.InstallerType)
