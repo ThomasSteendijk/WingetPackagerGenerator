@@ -84,7 +84,7 @@ $Xaml = @"
             />
         </Grid>
     </TabItem>
-    <TabItem Header="Comandos">
+    <TabItem Header="the Comandos">
         <Grid Background="#FFE5E5E5">
             <TextBox
                 Name                = "Commandos"
@@ -176,8 +176,24 @@ $Version.Add_SelectionChanged({
     $Installers.text = ""
     foreach ($installer in $InstallerInfo.Installers) {
         $Installers.text += "Architecture  :  $($installer.Architecture)
-InstallerType :  $($installer.InstallerType)
+InstallerType :  $(
+    if ($installer.InstallerType) {$installer.InstallerType}
+    else {
+        $InstallerInfo.InstallerType
+    }
+    )
 InstallerUrl  :  $($installer.InstallerUrl)`n"
+        if ($installer.InstallerType -eq "inno") {
+            $Commandos.text += "$(($installer.InstallerUrl.split("/"))[-1]) /S`n"
+        }
+        if ($installer.InstallerType -eq "wix") {
+        $Commandos.text += "msiexec.exe /i $(($installer.InstallerUrl.split("/"))[-1]) /qb-!`n"
+        
+        }
+        if ($installer.InstallerType -eq "nullsoft") {
+            $Commandos.text += "$(($installer.InstallerUrl.split("/"))[-1]) /S`n"
+        }
+        #$Comandos.text = 
     }
     
     
