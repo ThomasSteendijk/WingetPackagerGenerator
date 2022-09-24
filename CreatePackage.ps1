@@ -32,7 +32,7 @@ $Xaml = @"
     VerticalAlignment   = "Top"
     Margin              = "20,20,0,0" 
     Width               = "500" 
-    IsTextSearchEnabled = "True"
+    IsTextSearchEnabled = "false"
     IsEditable          = "True"
     />
 
@@ -127,13 +127,6 @@ $Xaml = @"
 
 
 $ProgressPreference = "SilentlyContinue"
-<#
-if (!(Test-Path -Path  .\winget-pkgs.zip)) {
-    Invoke-WebRequest -Uri "https://codeload.github.com/microsoft/winget-pkgs/zip/refs/heads/master" -UseBasicParsing -OutFile .\winget-pkgs.zip
-    Expand-Archive -Path .\winget-pkgs.zip
-}
-#>
-
 $manifestBase = ".\winget-pkgs\manifests"
 
 
@@ -144,9 +137,6 @@ $Window = [Windows.Markup.XamlReader]::Parse($Xaml)
 [xml]$xml = $Xaml
 
 $xml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name $_.Name -Value $Window.FindName($_.Name) }
-
-
-#$Publisher.IsTextSearchEnabled = $true
 
 Get-ChildItem -Directory $manifestBase -Depth 1 | foreach -Process {
     $Publisher.AddChild($_)
@@ -208,8 +198,13 @@ $Publisher.AddChild("hello")
 })
 
 
+$Publisher.AddHandler(
+    [System.Windows.Controls.Primitives.TextBoxBase]::TextChangedEvent, 
+    [System.Windows.RoutedEventHandler]{ 
+        (Get-ChildItem -Directory $manifestBase -Depth 1) | Where-Object -property "name" -like "*$($Publisher.Text)*"| ForEach-Object -begin {$Publisher.Items.Clear()} -Process {
+            $Publisher.AddChild($_)
+        }
+    })
 
 
 $Window.ShowDialog()
-
-
